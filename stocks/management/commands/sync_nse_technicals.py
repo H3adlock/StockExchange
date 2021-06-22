@@ -12,14 +12,16 @@ log = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Syncs NSE Historical Data'
+    help = 'Syncs NSE Technicals'
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument('--override', dest='update', action='store_false', help='', default=True)
+    def add_arguments(self, parser):
+        parser.add_argument('--override', dest='update', action='store_false', help='', default=True)
 
     def handle(self, *args, **options):
-        # if not options['update']:
-        NSETechnical.objects.all().delete()
+        # import pdb
+        # pdb.set_trace()
+        if not options['update']:
+            NSETechnical.objects.all().delete()
         symbols = Symbol.objects.all()
         for symbol in symbols:
             nse_history_data = NSEHistoricalData.objects.filter(symbol__symbol_name=symbol).order_by(
@@ -135,8 +137,11 @@ class Command(BaseCommand):
             nse_technical.replace({np.nan: None}, inplace=True)
             nse_technical.replace([np.inf, -np.inf], None, inplace=True)
             list_to_create = []
-
-            for index, data in enumerate(nse_history_data):
+            list_to_update = []
+            for index in range(len(nse_history_data) - 1, -1, -1):
+                data = nse_history_data[index]
+                if data.technicals:
+                    break
                 technical = NSETechnical(nse_historical_data=data,
                                          trend_macd=nse_technical['trend_macd'][index],
                                          trend_macd_signal=nse_technical['trend_macd_signal'][index],
@@ -168,6 +173,9 @@ class Command(BaseCommand):
                                              'momentum_stoch_rsi_k'][index],
                                          momentum_stoch_rsi_d=nse_technical[
                                              'momentum_stoch_rsi_d'][index])
+                data.technicals = True
+                list_to_update.append(data)
                 list_to_create.append(technical)
             NSETechnical.objects.bulk_create(list_to_create)
+            NSEHistoricalData.objects.bulk_update(list_to_update, ['technicals'])
             print(f"Technicals updated for {symbol}")

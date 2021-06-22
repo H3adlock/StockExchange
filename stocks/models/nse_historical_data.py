@@ -16,6 +16,7 @@ class NSEHistoricalData(models.Model):
     total_traded_value = models.FloatField(blank=False, null=False)
     timestamp = models.DateField(blank=False, null=False)
     total_trades = models.BigIntegerField(blank=False, null=False)
+    technicals = models.BooleanField(blank=False, null=False, default=False)
 
     def __str__(self):
         return self.symbol.symbol_name + ' ' + self.timestamp.strftime('%Y%m%d')
