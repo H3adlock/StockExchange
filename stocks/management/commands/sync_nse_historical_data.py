@@ -36,16 +36,17 @@ class Command(BaseCommand):
             for row in data.index:
                 nse_data = data.loc[row].copy()
                 nse_data['TIMESTAMP'] = pd.to_datetime(nse_data['TIMESTAMP'], format="%d-%b-%Y")
-                nse_data_list.append(
-                    NSEHistoricalData(ISIN=nse_data['ISIN'],
-                                      symbol=Symbol.objects.get_or_create(symbol_name=nse_data['SYMBOL'])[0],
-                                      series=nse_data['SERIES'],
-                                      open=nse_data['OPEN'], high=nse_data['HIGH'], low=nse_data['LOW'],
-                                      close=nse_data['CLOSE'], last=nse_data['LAST'], prev_close=nse_data['PREVCLOSE'],
-                                      total_traded_quantity=nse_data['TOTTRDQTY'],
-                                      total_traded_value=nse_data['TOTTRDVAL'],
-                                      timestamp=nse_data['TIMESTAMP'], total_trades=nse_data['TOTALTRADES']))
-                count += 1
+                if nse_data['TIMESTAMP']:
+                    nse_data_list.append(
+                        NSEHistoricalData(ISIN=nse_data['ISIN'],
+                                          symbol=Symbol.objects.get_or_create(symbol_name=nse_data['SYMBOL'])[0],
+                                          series=nse_data['SERIES'],
+                                          open=nse_data['OPEN'], high=nse_data['HIGH'], low=nse_data['LOW'],
+                                          close=nse_data['CLOSE'], last=nse_data['LAST'], prev_close=nse_data['PREVCLOSE'],
+                                          total_traded_quantity=nse_data['TOTTRDQTY'],
+                                          total_traded_value=nse_data['TOTTRDVAL'],
+                                          timestamp=nse_data['TIMESTAMP'], total_trades=nse_data['TOTALTRADES']))
+                    count += 1
             NSEHistoricalData.objects.bulk_create(nse_data_list)
             print(f"{count} nse record added from {csv_name}...")
             total_records += count
